@@ -1,0 +1,8 @@
+# Imagenes originales sin optimizar: se quedan en el disco como respaldo,
+# pero al repo solo suben las versiones optimizadas de assets/img/
+assets/img/_originales/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
