@@ -79,5 +79,5 @@ assets/docs/      Documentos
 
 ## Trabajos enlazados
 
-- [Immersive Landing Page Design](https://www.figma.com/make/F8ZqIShRKfXpooKJKKJQv5/Immersive-Landing-Page-Design?p=f&preview-route=%2F%23men) — diseño en Figma Make
+- [Immersive Landing Page Design](https://www.figma.com/make/F8ZqIShRKfXpooKJKKJQv5/Immersive-Landing-Page-Design?code-node-id=0-6&p=f&fullscreen=1) — diseño en Figma Make
 - Rodando Seguro — sitio del taller de bicicletas de Don Carlos (en desarrollo)
