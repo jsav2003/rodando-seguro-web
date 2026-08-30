@@ -1,21 +1,197 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-tema="claro">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rodando Seguro - Taller Don Carlos</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="Portafolio del curso Desarrollo de Aplicaciones Web con modo oscuro/claro" />
+    <meta name="author" content="jsav2003" />
+    <title>Web Development - Portafolio</title>
+
+    <!--
+      Script anti-FOUC (Flash Of Unstyled Content).
+      Se ejecuta ANTES de que el navegador pinte la pagina para que, al recargar
+      en modo oscuro, no aparezca un destello blanco. Es el unico JS inline del
+      proyecto; toda la logica restante vive en js/main.js
+    -->
+    <script>
+        (function () {
+            try {
+                var temaGuardado = localStorage.getItem('tema');
+                if (!temaGuardado) {
+                    var prefiereOscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    temaGuardado = prefiereOscuro ? 'oscuro' : 'claro';
+                }
+                document.documentElement.setAttribute('data-tema', temaGuardado);
+            } catch (e) {
+                // Modo incognito o storage bloqueado: se queda en el tema claro por defecto
+            }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.2.3 (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Estilos propios: aqui vive el tema oscuro/claro -->
+    <link href="css/styles.css" rel="stylesheet" />
 </head>
+
 <body>
-    <header>
-        <!-- Header Section -->
-    </header>
-    <main>
-        <!-- Main Content -->
-    </main>
-    <footer>
-        <!-- Footer Section -->
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container px-5">
+            <a class="navbar-brand" href="#!">Web Development</a>
+
+            <!--
+              El boton del tema va FUERA del .collapse y con order-lg-3 para que
+              quede siempre visible: en movil junto a la hamburguesa, y en
+              escritorio al final de la barra. Si estuviera dentro del menu
+              colapsable habria que abrir la hamburguesa para cambiar de tema.
+            -->
+            <button id="btn-tema" class="btn btn-tema ms-auto me-2 order-lg-3" type="button" aria-pressed="false"
+                aria-label="Cambiar entre modo claro y oscuro">
+                <span id="icono-tema" aria-hidden="true">&#127769;</span>
+                <!-- Bajo 576px solo se muestra el icono para que quepa junto a la
+                     hamburguesa; el aria-label del boton mantiene la accesibilidad -->
+                <span id="texto-tema" class="d-none d-sm-inline">Modo oscuro</span>
+            </button>
+
+            <button class="navbar-toggler order-lg-4" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Abrir navegacion"><span class="navbar-toggler-icon"></span></button>
+
+            <div class="collapse navbar-collapse order-lg-2" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link active" aria-current="page" href="#!">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#modules">Trabajos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#panel-storage">Storage</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido -->
+    <div class="container px-4 px-lg-5">
+        <!-- Hero -->
+        <div class="row gx-4 gx-lg-5 align-items-center my-5">
+            <div class="col-lg-7">
+                <img class="img-fluid rounded mb-4 mb-lg-0"
+                    src="https://dummyimage.com/900x400/0d6efd/ffffff.jpg&text=Desarrollo+de+Aplicaciones+Web"
+                    alt="Portada del portafolio del curso" />
+            </div>
+            <div class="col-lg-5">
+                <h1 class="font-weight-light">Desarrollo de Aplicaciones Web</h1>
+                <p>Portafolio de los trabajos realizados en el curso de Ingenieria Multimedia. A lo largo del semestre
+                    se avanza desde los fundamentos de HTML, CSS y JavaScript hasta el uso de librerias y frameworks
+                    como React.js.</p>
+                <p>Esta pagina implementa un <strong>modo oscuro/claro</strong> persistente usando
+                    <code>localStorage</code> y <code>sessionStorage</code>. Pulsa el boton de la barra superior para
+                    probarlo.
+                </p>
+            </div>
+        </div>
+
+        <!-- Call to action -->
+        <div class="card tarjeta-cta my-5 py-4 text-center">
+            <div class="card-body">
+                <p class="m-0">Tu preferencia de tema se guarda en el navegador: al volver a entrar, la pagina te
+                    recuerda como la dejaste.</p>
+            </div>
+        </div>
+
+        <!-- Trabajos -->
+        <h2 class="mb-4">Trabajos</h2>
+        <div class="row gx-4 gx-lg-5" id="modules">
+            <div class="col-md-4 mb-5">
+                <div class="card h-100">
+                    <img src="https://dummyimage.com/900x400/6f42c1/ffffff.jpg&text=Immersive+Landing+Page"
+                        class="card-img-top" alt="Immersive Landing Page Design">
+                    <div class="card-body">
+                        <h3 class="card-title h4">Immersive Landing Page</h3>
+                        <p class="card-text">Diseno de una landing page inmersiva creada en Figma Make. Explora la
+                            jerarquia visual, el uso del espacio y la navegacion por secciones de producto.</p>
+                    </div>
+                    <div class="card-footer">
+                        <a class="btn btn-primary btn-sm"
+                            href="https://www.figma.com/make/F8ZqIShRKfXpooKJKKJQv5/Immersive-Landing-Page-Design?p=f&preview-route=%2F%23men"
+                            target="_blank" rel="noopener">Ver diseno</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-5">
+                <div class="card h-100">
+                    <img src="https://dummyimage.com/900x400/198754/ffffff.jpg&text=Rodando+Seguro" class="card-img-top"
+                        alt="Proyecto Rodando Seguro">
+                    <div class="card-body">
+                        <h3 class="card-title h4">Rodando Seguro</h3>
+                        <p class="card-text">Sitio estatico para el taller mecanico de bicicletas de Don Carlos.
+                            Definicion del sitemap, estructura de carpetas y maquetacion inicial del proyecto.</p>
+                    </div>
+                    <div class="card-footer"><a class="btn btn-primary btn-sm" href="#!">Proximamente</a></div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-5">
+                <div class="card h-100">
+                    <img src="https://dummyimage.com/900x400/fd7e14/ffffff.jpg&text=Modo+Oscuro" class="card-img-top"
+                        alt="Ejercicio de modo oscuro">
+                    <div class="card-body">
+                        <h3 class="card-title h4">Modo oscuro / claro</h3>
+                        <p class="card-text">Ejercicio de la semana 5: variables CSS, atributo <code>data-tema</code> en
+                            la raiz del documento y manejo de <code>localStorage</code> y <code>sessionStorage</code>.
+                        </p>
+                    </div>
+                    <div class="card-footer"><a class="btn btn-primary btn-sm" href="#panel-storage">Ver datos</a></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel que demuestra el uso de los dos storages -->
+        <section id="panel-storage" class="panel-storage mb-5">
+            <h2 class="h4">Estado del almacenamiento</h2>
+            <p class="texto-atenuado">
+                <code>localStorage</code> sobrevive al cierre del navegador, por eso guarda tu preferencia de tema.
+                <code>sessionStorage</code> vive solo mientras la pestana este abierta, por eso guarda las metricas de
+                esta visita. Abre esta pagina en una pestana nueva y compara los dos bloques.
+            </p>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="dato-storage">
+                        <span class="etiqueta-storage">localStorage &rarr; tema</span>
+                        <span class="valor-storage" id="valor-tema">-</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dato-storage">
+                        <span class="etiqueta-storage">sessionStorage &rarr; temaInicial</span>
+                        <span class="valor-storage" id="valor-tema-inicial">-</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dato-storage">
+                        <span class="etiqueta-storage">sessionStorage &rarr; cambiosTema</span>
+                        <span class="valor-storage" id="valor-cambios">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-restablecer" class="btn btn-outline-secondary btn-sm mt-3" type="button">
+                Restablecer preferencia
+            </button>
+            <p class="texto-atenuado mt-2 mb-0"><small id="mensaje-restablecer" role="status"></small></p>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="pie-pagina py-5">
+        <div class="container px-4 px-lg-5">
+            <p class="m-0 text-center">Copyright &copy; jsav2003 2026</p>
+        </div>
     </footer>
+
+    <!-- Bootstrap JS (navbar responsive) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Logica del tema -->
     <script src="js/main.js"></script>
 </body>
+
 </html>
