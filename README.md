@@ -86,7 +86,7 @@ para no cargar el repositorio con imágenes sin comprimir.
 
 ## Parcial: Caracterización Financiera y Presupuesto
 
-SPA de finanzas personales en `finanzas/`. Trabajo en parejas.
+SPA de finanzas personales en `finanzas/`.
 
 **Entregables**
 
@@ -95,7 +95,17 @@ SPA de finanzas personales en `finanzas/`. Trabajo en parejas.
 | Repositorio | <https://github.com/jsav2003/rodando-seguro-web> |
 | Aplicación desplegada | <https://jsav2003.github.io/rodando-seguro-web/finanzas/> |
 
-También se llega desde la tarjeta "Caracterización Financiera" del portafolio.
+También se llega desde la tarjeta "Finanzas Personales" del portafolio.
+
+**Autoría**
+
+Trabajo en parejas. El reparto quedó por archivos, así que el historial de git
+muestra quién hizo qué:
+
+| Autor | Parte |
+|---|---|
+| [@jsav2003](https://github.com/jsav2003) | Estructura de la SPA, estilos, capa de persistencia (`almacenamiento.js`), caracterización inicial y dashboard (`app.js`) |
+| [@mafegiraldoduque](https://github.com/mafegiraldoduque) | Módulo de gastos diarios: alta, tabla dinámica y eliminación (`gastos-diarios.js`) |
 
 **Cómo funciona**
 
