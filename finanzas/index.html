@@ -334,7 +334,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-danger" id="btn-confirmar-reset">Si, borrar todo</button>
+                    <!-- Cierra el modal por si mismo; el borrado corre despues,
+                         cuando Bootstrap ya retiro el backdrop (hidden.bs.modal) -->
+                    <button type="button" class="btn btn-danger" id="btn-confirmar-reset"
+                        data-bs-dismiss="modal">Si, borrar todo</button>
                 </div>
             </div>
         </div>
