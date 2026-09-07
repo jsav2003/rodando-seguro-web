@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es" data-tema="claro">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description"
+        content="SPA de finanzas personales: caracterizacion inicial, dashboard de gastos y persistencia con localStorage" />
+    <meta name="author" content="jsav2003" />
+    <title>Finanzas Personales</title>
+
+    <!--
+      Script anti-FOUC (Flash Of Unstyled Content).
+      Se ejecuta ANTES de que el navegador pinte la pagina para que, al recargar
+      en modo oscuro, no aparezca un destello blanco. Es el unico JS inline de
+      la app; toda la logica restante vive en finanzas/js/
+    -->
+    <script>
+        (function () {
+            try {
+                var temaGuardado = localStorage.getItem('tema');
+                if (!temaGuardado) {
+                    var prefiereOscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    temaGuardado = prefiereOscuro ? 'oscuro' : 'claro';
+                }
+                document.documentElement.setAttribute('data-tema', temaGuardado);
+            } catch (e) {
+                // Modo incognito o storage bloqueado: se queda en el tema claro por defecto
+            }
+        })();
+    </script>
+
+    <!-- Bootstrap 5.2.3 (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Tema y componentes del portafolio: aqui viven las variables de color -->
+    <link href="../css/styles.css" rel="stylesheet" />
+    <!-- Estilos propios de la app, escritos sobre esas mismas variables -->
+    <link href="css/finanzas.css" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- ==================================================================
+         Navbar
+         ================================================================== -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container px-4 px-lg-5">
+            <a class="navbar-brand" href="./">Finanzas Personales</a>
+
+            <button id="btn-tema" class="btn btn-tema ms-auto me-2 order-lg-3" type="button" aria-pressed="false"
+                aria-label="Cambiar entre modo claro y oscuro">
+                <span id="icono-tema" aria-hidden="true">&#127769;</span>
+                <span id="texto-tema" class="d-none d-sm-inline">Modo oscuro</span>
+            </button>
+
+            <button class="navbar-toggler order-lg-4" type="button" data-bs-toggle="collapse"
+                data-bs-target="#menu-finanzas" aria-controls="menu-finanzas" aria-expanded="false"
+                aria-label="Abrir navegacion"><span class="navbar-toggler-icon"></span></button>
+
+            <div class="collapse navbar-collapse order-lg-2" id="menu-finanzas">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link" href="../">&larr; Portafolio</a></li>
+                    <!-- El reseteo solo tiene sentido cuando ya hay configuracion guardada -->
+                    <li class="nav-item d-none" id="item-reset">
+                        <button id="btn-reset" class="btn btn-outline-danger btn-sm ms-lg-2" type="button"
+                            data-bs-toggle="modal" data-bs-target="#modal-reset">
+                            Resetear / Reconfigurar
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container px-4 px-lg-5 my-4 my-lg-5">
+
+        <!-- ==============================================================
+             VISTA 1: Caracterizacion inicial
+             Es la unica visible mientras localStorage no tenga perfil.
+             ============================================================== -->
+        <section id="vista-caracterizacion" class="d-none">
+            <h1 class="h2">Caracterizacion inicial</h1>
+            <p class="texto-atenuado">
+                Antes de registrar gastos necesitamos tu foto financiera del mes: cuanto
+                entra y cuales son tus gastos fijos. Con eso calculamos tu capacidad de
+                ahorro. Todo queda guardado en este navegador.
+            </p>
+
+            <form id="form-caracterizacion" novalidate>
+                <!-- --- Ingresos --------------------------------------- -->
+                <fieldset class="bloque-form mb-4">
+                    <legend class="h5">1. Ingresos</legend>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="ingreso-principal">Ingreso mensual principal</label>
+                            <div class="input-group has-validation">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="ingreso-principal" min="1" step="1000"
+                                    placeholder="0" />
+                                <div class="invalid-feedback">Ingresa un monto mayor que cero.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="ingresos-adicionales">
+                                Ingresos adicionales <span class="texto-atenuado">(opcional)</span>
+                            </label>
+                            <div class="input-group has-validation">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="ingresos-adicionales" min="0" step="1000"
+                                    placeholder="0" />
+                                <div class="invalid-feedback">No puede ser negativo.</div>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <!-- --- Gastos fijos ----------------------------------- -->
+                <fieldset class="bloque-form mb-4">
+                    <legend class="h5">2. Gastos fijos mensuales</legend>
+                    <p class="texto-atenuado small">
+                        Si un gasto lo divides con alguien, marca el interruptor e indica tu
+                        aporte: solo se descuenta de tu balance la parte que pagas tu.
+                    </p>
+
+                    <div id="lista-gastos-fijos"></div>
+
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-agregar-gasto-fijo">
+                        + Agregar gasto fijo
+                    </button>
+                    <p class="text-danger small mt-2 mb-0 d-none" id="error-gastos-fijos" role="alert">
+                        Agrega al menos un gasto fijo.
+                    </p>
+                </fieldset>
+
+                <button type="submit" class="btn btn-primary btn-lg" id="btn-guardar-config">
+                    Guardar configuracion
+                </button>
+            </form>
+
+            <!-- Plantilla de una fila de gasto fijo. Se clona desde app.js -->
+            <template id="tpl-gasto-fijo">
+                <div class="fila-gasto-fijo">
+                    <div class="row g-3 align-items-start">
+                        <div class="col-md-6">
+                            <label class="form-label">Concepto</label>
+                            <input type="text" class="form-control campo-concepto"
+                                placeholder="Arriendo, Servicios, Internet..." />
+                            <div class="invalid-feedback">Escribe el concepto del gasto.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Monto total mensual</label>
+                            <div class="input-group has-validation">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control campo-monto" min="1" step="1000"
+                                    placeholder="0" />
+                                <div class="invalid-feedback">El monto debe ser mayor que cero.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-md-end">
+                            <label class="form-label d-none d-md-block">&nbsp;</label>
+                            <button type="button" class="btn btn-outline-danger btn-sm btn-quitar-gasto">Quitar</button>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch mt-3">
+                        <input class="form-check-input chk-compartido" type="checkbox" role="switch" />
+                        <label class="form-check-label lbl-compartido">Es un gasto compartido</label>
+                    </div>
+
+                    <div class="row g-3 mt-0 bloque-compartido d-none">
+                        <div class="col-md-4">
+                            <label class="form-label">Dividir por</label>
+                            <select class="form-select modo-division">
+                                <option value="porcentaje">% de aporte personal</option>
+                                <option value="personas">Cantidad de personas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label etiqueta-division">Tu aporte (%)</label>
+                            <input type="number" class="form-control valor-division" min="1" max="100" step="1"
+                                value="50" />
+                            <div class="invalid-feedback">Valor fuera de rango.</div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <p class="mb-2 texto-atenuado small">
+                                Pagas realmente <strong class="monto-real">$0</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </section>
+
+        <!-- ==============================================================
+             VISTA 2: Dashboard
+             ============================================================== -->
+        <section id="vista-dashboard" class="d-none">
+            <h1 class="h2">Dashboard</h1>
+            <p class="texto-atenuado">Resumen del mes y registro de tus gastos cotidianos.</p>
+
+            <!-- --- Panel de resumen ------------------------------------ -->
+            <div class="row g-3 g-lg-4 mb-4">
+                <div class="col-6 col-lg-3">
+                    <div class="card tarjeta-metrica h-100">
+                        <div class="card-body">
+                            <span class="etiqueta-metrica">Ingresos totales</span>
+                            <span class="valor-metrica" id="card-ingresos">$0</span>
+                            <span class="nota-metrica" id="nota-ingresos"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card tarjeta-metrica h-100">
+                        <div class="card-body">
+                            <span class="etiqueta-metrica">Gastos fijos</span>
+                            <span class="valor-metrica" id="card-gastos-fijos">$0</span>
+                            <span class="nota-metrica" id="nota-gastos-fijos"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card tarjeta-metrica h-100">
+                        <div class="card-body">
+                            <span class="etiqueta-metrica">Capacidad de ahorro</span>
+                            <span class="valor-metrica" id="card-balance">$0</span>
+                            <span class="nota-metrica" id="nota-balance"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card tarjeta-metrica h-100">
+                        <div class="card-body">
+                            <span class="etiqueta-metrica">Gastos variables del mes</span>
+                            <span class="valor-metrica" id="card-gastos-variables">$0</span>
+                            <span class="nota-metrica" id="nota-gastos-variables"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desglose de los gastos fijos declarados -->
+            <p class="mb-4">
+                <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#detalle-fijos" aria-expanded="false" aria-controls="detalle-fijos">
+                    Ver desglose de gastos fijos
+                </button>
+            </p>
+            <div class="collapse mb-4" id="detalle-fijos">
+                <div class="tabla-scroll">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Concepto</th>
+                                <th scope="col" class="text-end">Monto total</th>
+                                <th scope="col">Reparto</th>
+                                <th scope="col" class="text-end">Pagas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-fijos"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- --- Registro de gastos diarios -------------------------- -->
+            <div class="bloque-form mb-4">
+                <h2 class="h5">Registrar gasto del dia</h2>
+                <form id="form-gasto-diario" class="row g-3 align-items-start" novalidate>
+                    <div class="col-md-4">
+                        <label class="form-label" for="gasto-concepto">Concepto</label>
+                        <input type="text" class="form-control" id="gasto-concepto"
+                            placeholder="Almuerzo, bus, cine..." />
+                        <div class="invalid-feedback">Escribe un concepto.</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="gasto-monto">Monto</label>
+                        <div class="input-group has-validation">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="gasto-monto" min="1" step="100"
+                                placeholder="0" />
+                            <div class="invalid-feedback">Debe ser mayor que cero.</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="gasto-categoria">Categoria</label>
+                        <select class="form-select" id="gasto-categoria">
+                            <option value="Comida">Comida</option>
+                            <option value="Ocio">Ocio</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Varios">Varios</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-grid">
+                        <label class="form-label d-none d-md-block">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary">Agregar</button>
+                    </div>
+                </form>
+            </div>
+
+            <h2 class="h5">Gastos registrados</h2>
+            <div class="tabla-scroll">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Concepto</th>
+                            <th scope="col">Categoria</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col" class="text-end">Monto</th>
+                            <th scope="col" class="text-end">Accion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-gastos"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- ==================================================================
+         Confirmacion del reseteo.
+         Modal de Bootstrap en vez de confirm() nativo: un dialogo del
+         navegador bloquea la pagina y no se puede automatizar la prueba.
+         ================================================================== -->
+    <div class="modal fade" id="modal-reset" tabindex="-1" aria-labelledby="titulo-modal-reset" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="titulo-modal-reset">Resetear la aplicacion</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">
+                        Se borraran de este navegador tu caracterizacion y todos los gastos
+                        registrados, y volveras al formulario inicial. Esta accion no se puede
+                        deshacer.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirmar-reset">Si, borrar todo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="pie-pagina py-4">
+        <div class="container px-4 px-lg-5">
+            <p class="m-0 text-center">Caracterizacion Financiera y Presupuesto &middot; 2026</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS (navbar, modal, collapse) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Tema compartido con el portafolio -->
+    <script src="../js/tema.js"></script>
+    <!-- Capa de persistencia -->
+    <script src="js/almacenamiento.js"></script>
+    <!-- Modulo de gastos diarios -->
+    <script src="js/gastos-diarios.js"></script>
+    <!-- Caracterizacion, dashboard y control de flujo -->
+    <script src="js/app.js"></script>
+</body>
+
+</html>
