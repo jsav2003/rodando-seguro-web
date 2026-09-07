@@ -1,7 +1,7 @@
 /* ==========================================================================
    Modulo de gastos diarios
    --------------------------------------------------------------------------
-   PENDIENTE DE IMPLEMENTAR.
+    Implementa el listado, alta, validacion y eliminacion de gastos diarios.
 
    Este archivo es independiente del resto: app.js solo lo conoce por las dos
    funciones que expone abajo, asi que se puede trabajar aqui sin tocar
@@ -44,30 +44,9 @@
      .badge-varios    para el badge de color de cada categoria
      .fila-vacia      para la fila de "aun no hay gastos"
 
-   ---------------------------------------------------------------------------
-   POR HACER
-
-   1. renderizarTabla()
-      Redibuja #tabla-gastos con la lista. Si esta vacia, una sola fila
-      <tr class="fila-vacia"><td colspan="5">Aun no hay gastos registrados.</td></tr>
-      Cada fila lleva el boton de eliminar con data-id="<id del gasto>".
-      Formatear el monto con la funcion App.formatearMoneda(n).
-
-   2. Alta (submit de #form-gasto-diario)
-      preventDefault(). Validar que el concepto no este vacio y que el monto
-      sea mayor que cero; marcar los campos malos con classList.add('is-invalid')
-      y quitarselo cuando se corrijan. Nada de alert().
-      Si esta bien: push con id Date.now() y fecha de hoy (YYYY-MM-DD),
-      Almacen.guardarGastos(), renderizarTabla(), alCambiar(), limpiar el
-      formulario y devolver el foco a #gasto-concepto.
-
-   3. Eliminar
-      Un solo listener sobre #tabla-gastos (delegacion de eventos), no uno por
-      fila. Filtrar la lista por el data-id del boton, guardar, renderizar y
-      llamar alCambiar().
-
-   Para probar: python -m http.server 8080 en la raiz del repo y abrir
-   http://localhost:8080/finanzas/
+    La tabla usa nodos DOM para que el concepto escrito por el usuario nunca se
+    interprete como HTML. Los cambios se guardan mediante Almacen y notifican
+    al dashboard con el callback recibido en iniciar().
    ========================================================================== */
 
 window.GastosDiarios = (function () {
@@ -76,17 +55,129 @@ window.GastosDiarios = (function () {
     // Lista en memoria; la fuente de verdad sigue siendo localStorage
     var gastos = [];
 
+    var formulario = document.getElementById('form-gasto-diario');
+    var inputConcepto = document.getElementById('gasto-concepto');
+    var inputMonto = document.getElementById('gasto-monto');
+    var inputCategoria = document.getElementById('gasto-categoria');
+    var tabla = document.getElementById('tabla-gastos');
+
+    function claseCategoria(categoria) {
+        return {
+            Comida: 'badge-comida',
+            Ocio: 'badge-ocio',
+            Transporte: 'badge-transporte',
+            Varios: 'badge-varios'
+        }[categoria] || 'badge-varios';
+    }
+
+    function crearCelda(texto) {
+        var celda = document.createElement('td');
+        celda.textContent = texto;
+        return celda;
+    }
+
+    function renderizarTabla() {
+        tabla.replaceChildren();
+
+        if (gastos.length === 0) {
+            var filaVacia = document.createElement('tr');
+            filaVacia.className = 'fila-vacia';
+            var celdaVacia = crearCelda('Aun no hay gastos registrados.');
+            celdaVacia.colSpan = 5;
+            filaVacia.appendChild(celdaVacia);
+            tabla.appendChild(filaVacia);
+            return;
+        }
+
+        gastos.forEach(function (gasto) {
+            var fila = document.createElement('tr');
+            var badge = document.createElement('span');
+            var boton = document.createElement('button');
+
+          fila.appendChild(crearCelda(gasto.concepto));
+          badge.className = 'badge-categoria ' + claseCategoria(gasto.categoria);
+          badge.textContent = gasto.categoria;
+          var celdaCategoria = document.createElement('td');
+          celdaCategoria.appendChild(badge);
+          fila.appendChild(celdaCategoria);
+          fila.appendChild(crearCelda(gasto.fecha));
+          fila.appendChild(crearCelda(App.formatearMoneda(gasto.monto)));
+
+            boton.type = 'button';
+            boton.className = 'btn btn-sm btn-outline-danger';
+            boton.dataset.id = String(gasto.id);
+            boton.textContent = 'Eliminar';
+            var celdaAccion = document.createElement('td');
+            celdaAccion.appendChild(boton);
+            fila.appendChild(celdaAccion);
+            tabla.appendChild(fila);
+        });
+    }
+
+    function fechaDeHoy() {
+        var hoy = new Date();
+        var mes = String(hoy.getMonth() + 1).padStart(2, '0');
+        var dia = String(hoy.getDate()).padStart(2, '0');
+        return hoy.getFullYear() + '-' + mes + '-' + dia;
+    }
+
     function iniciar(alCambiar) {
         gastos = Almacen.leerGastos();
+        renderizarTabla();
 
-        // TODO: renderizarTabla(), enganchar el submit y el click de eliminar,
-        //       y llamar alCambiar() despues de cada cambio.
-        void alCambiar;
+        formulario.addEventListener('submit', function (evento) {
+            evento.preventDefault();
+
+          var concepto = inputConcepto.value.trim();
+          var monto = parseFloat(inputMonto.value);
+          var conceptoInvalido = concepto === '';
+          var montoInvalido = isNaN(monto) || monto <= 0;
+
+          inputConcepto.classList.toggle('is-invalid', conceptoInvalido);
+          inputMonto.classList.toggle('is-invalid', montoInvalido);
+
+            if (conceptoInvalido || montoInvalido) {
+                return;
+            }
+
+            gastos.push({
+                id: Date.now(),
+                concepto: concepto,
+                monto: monto,
+                categoria: inputCategoria.value,
+                fecha: fechaDeHoy()
+            });
+            Almacen.guardarGastos(gastos);
+            renderizarTabla();
+            alCambiar();
+            formulario.reset();
+            inputConcepto.focus();
+        });
+
+        inputConcepto.addEventListener('input', function () {
+            inputConcepto.classList.toggle('is-invalid', inputConcepto.value.trim() === '');
+        });
+        inputMonto.addEventListener('input', function () {
+            var monto = parseFloat(inputMonto.value);
+            inputMonto.classList.toggle('is-invalid', isNaN(monto) || monto <= 0);
+        });
+
+        tabla.addEventListener('click', function (evento) {
+            var boton = evento.target.closest('button[data-id]');
+            if (!boton || !tabla.contains(boton)) {
+                return;
+            }
+
+            gastos = gastos.filter(function (gasto) {
+                return String(gasto.id) !== boton.dataset.id;
+            });
+            Almacen.guardarGastos(gastos);
+            renderizarTabla();
+            alCambiar();
+        });
     }
 
     function total() {
-        // TODO: sumar los montos. Mientras tanto devuelve 0 para que el
-        //       dashboard se pinte sin romperse.
         return gastos.reduce(function (suma, gasto) {
             return suma + Number(gasto.monto || 0);
         }, 0);
