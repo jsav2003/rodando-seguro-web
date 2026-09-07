@@ -237,6 +237,30 @@
                 </div>
             </div>
 
+            <!-- ==========================================================
+                 Estado de la plata
+                 Los dos bloques aparecen y desaparecen solos desde app.js.
+                 ========================================================== -->
+
+            <!-- Salta cuando lo gastado en efectivo (fijos + diarios) supera
+                 el ingreso del mes. aria-live para que un lector de pantalla
+                 lo anuncie al aparecer, sin robar el foco. -->
+            <div class="alert alert-danger d-none" id="alerta-exceso" role="alert" aria-live="polite">
+                <strong>Te pasaste de tu ingreso mensual.</strong>
+                Vas <strong id="valor-exceso">$0</strong> por encima de lo que entra este mes.
+                <span class="d-block small mt-1">
+                    Si alguno de esos gastos lo pagaste con tarjeta, marcalo como credito al
+                    registrarlo: deja de descontar de tu efectivo y pasa a tu deuda.
+                </span>
+            </div>
+
+            <!-- Solo se ve si hay gastos a credito -->
+            <div class="franja-deuda d-none" id="bloque-deuda">
+                <span class="etiqueta-metrica">Deuda en credito</span>
+                <span class="valor-deuda" id="valor-deuda">$0</span>
+                <span class="nota-metrica" id="nota-deuda"></span>
+            </div>
+
             <!-- Desglose de los gastos fijos declarados -->
             <p class="mb-4">
                 <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse"
@@ -291,6 +315,20 @@
                     <div class="col-md-2 d-grid">
                         <label class="form-label d-none d-md-block">&nbsp;</label>
                         <button type="submit" class="btn btn-primary">Agregar</button>
+                    </div>
+
+                    <!-- Un gasto a credito no sale del ingreso de este mes: no
+                         descuenta del efectivo disponible, suma a la deuda. -->
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="gasto-credito" />
+                            <label class="form-check-label" for="gasto-credito">
+                                Lo pague con credito
+                                <span class="texto-atenuado small">
+                                    &mdash; no descuenta de tu efectivo, suma a tu deuda
+                                </span>
+                            </label>
+                        </div>
                     </div>
                 </form>
             </div>

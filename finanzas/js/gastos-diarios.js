@@ -17,8 +17,16 @@
          resumen se recalculen.
 
      GastosDiarios.total()
-         Devuelve un number: la suma de los montos guardados.
+         Devuelve un number: la suma de TODOS los montos guardados.
          La usa la tarjeta #card-gastos-variables.
+
+     GastosDiarios.totalEfectivo()
+         Solo los que NO se pagaron con credito. Es lo que de verdad salio del
+         ingreso del mes, asi que es lo que define el disponible y si salta la
+         alerta de exceso.
+
+     GastosDiarios.totalCredito()
+         Solo los pagados con credito. Alimenta la franja de deuda.
 
    ---------------------------------------------------------------------------
    LO QUE YA ESTA LISTO PARA USAR
@@ -59,7 +67,14 @@ window.GastosDiarios = (function () {
     var inputConcepto = document.getElementById('gasto-concepto');
     var inputMonto = document.getElementById('gasto-monto');
     var inputCategoria = document.getElementById('gasto-categoria');
+    var inputCredito = document.getElementById('gasto-credito');
     var tabla = document.getElementById('tabla-gastos');
+
+    // Los gastos guardados antes de que existiera el credito no traen el campo.
+    // Se lee siempre por aqui para que cuenten como efectivo.
+    function esCredito(gasto) {
+        return !!gasto.credito;
+    }
 
     function claseCategoria(categoria) {
         return {
@@ -99,6 +114,13 @@ window.GastosDiarios = (function () {
           badge.textContent = gasto.categoria;
           var celdaCategoria = document.createElement('td');
           celdaCategoria.appendChild(badge);
+          // Segundo badge solo para los que se pagaron con credito
+          if (esCredito(gasto)) {
+              var badgeCredito = document.createElement('span');
+              badgeCredito.className = 'badge-categoria badge-credito ms-1';
+              badgeCredito.textContent = 'Credito';
+              celdaCategoria.appendChild(badgeCredito);
+          }
           fila.appendChild(celdaCategoria);
           fila.appendChild(crearCelda(gasto.fecha));
           fila.appendChild(crearCelda(App.formatearMoneda(gasto.monto)));
@@ -145,7 +167,8 @@ window.GastosDiarios = (function () {
                 concepto: concepto,
                 monto: monto,
                 categoria: inputCategoria.value,
-                fecha: fechaDeHoy()
+                fecha: fechaDeHoy(),
+                credito: inputCredito.checked
             });
             Almacen.guardarGastos(gastos);
             renderizarTabla();
@@ -177,14 +200,38 @@ window.GastosDiarios = (function () {
         });
     }
 
-    function total() {
+    // Suma los montos que cumplan el filtro. Sin filtro, suma todo.
+    function sumar(filtro) {
         return gastos.reduce(function (suma, gasto) {
+            if (filtro && !filtro(gasto)) {
+                return suma;
+            }
             return suma + Number(gasto.monto || 0);
         }, 0);
     }
 
+    // Todo lo registrado. Alimenta la tarjeta "Gastos variables del mes".
+    function total() {
+        return sumar(null);
+    }
+
+    // Lo que salio del ingreso de este mes. Es lo que define el disponible
+    // y, con el, si se paso o no del ingreso mensual.
+    function totalEfectivo() {
+        return sumar(function (gasto) {
+            return !esCredito(gasto);
+        });
+    }
+
+    // Lo que quedo debiendo
+    function totalCredito() {
+        return sumar(esCredito);
+    }
+
     return {
         iniciar: iniciar,
-        total: total
+        total: total,
+        totalEfectivo: totalEfectivo,
+        totalCredito: totalCredito
     };
 })();

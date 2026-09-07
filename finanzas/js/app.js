@@ -97,6 +97,12 @@ window.App = (function () {
     var notaGastosVariables = document.getElementById('nota-gastos-variables');
     var tablaFijos = document.getElementById('tabla-fijos');
 
+    var alertaExceso = document.getElementById('alerta-exceso');
+    var valorExceso = document.getElementById('valor-exceso');
+    var bloqueDeuda = document.getElementById('bloque-deuda');
+    var valorDeuda = document.getElementById('valor-deuda');
+    var notaDeuda = document.getElementById('nota-deuda');
+
     var modalReset = document.getElementById('modal-reset');
     var btnConfirmarReset = document.getElementById('btn-confirmar-reset');
 
@@ -319,8 +325,15 @@ window.App = (function () {
         var ingresos = totalIngresos(perfilActivo);
         var fijos = totalGastosFijos(perfilActivo);
         var balance = ingresos - fijos;
+
+        // Lo pagado con credito no salio del ingreso de este mes: no descuenta
+        // del efectivo, se acumula como deuda. Por eso el disponible solo resta
+        // el efectivo, y "pasarse del ingreso mensual" es que quede negativo:
+        //     fijos + efectivo > ingresos   <=>   disponible < 0
         var variables = GastosDiarios.total();
-        var disponible = balance - variables;
+        var efectivo = GastosDiarios.totalEfectivo();
+        var credito = GastosDiarios.totalCredito();
+        var disponible = balance - efectivo;
 
         cardIngresos.textContent = formatearMoneda(ingresos);
         notaIngresos.textContent = perfilActivo.ingresos.adicionales > 0
@@ -341,9 +354,42 @@ window.App = (function () {
         notaBalance.textContent = 'Disponible hoy: ' + formatearMoneda(disponible);
 
         cardGastosVariables.textContent = formatearMoneda(variables);
-        notaGastosVariables.textContent = ingresos > 0
-            ? Math.round(variables / ingresos * 100) + '% de tus ingresos'
-            : '';
+        if (credito > 0) {
+            notaGastosVariables.textContent = formatearMoneda(efectivo) + ' en efectivo · ' +
+                formatearMoneda(credito) + ' a credito';
+        } else {
+            notaGastosVariables.textContent = ingresos > 0
+                ? Math.round(variables / ingresos * 100) + '% de tus ingresos'
+                : '';
+        }
+
+        renderizarAlerta(disponible);
+        renderizarDeuda(credito, variables);
+    }
+
+    /* ======================================================================
+       Alerta de exceso y deuda
+       ====================================================================== */
+
+    // Se paso del ingreso mensual cuando el disponible queda negativo
+    function renderizarAlerta(disponible) {
+        var seExcedio = disponible < 0;
+
+        alertaExceso.classList.toggle('d-none', !seExcedio);
+        if (seExcedio) {
+            valorExceso.textContent = formatearMoneda(Math.abs(disponible));
+        }
+    }
+
+    function renderizarDeuda(credito, variables) {
+        var hayDeuda = credito > 0;
+
+        bloqueDeuda.classList.toggle('d-none', !hayDeuda);
+        if (hayDeuda) {
+            valorDeuda.textContent = formatearMoneda(credito);
+            notaDeuda.textContent = Math.round(credito / variables * 100) +
+                '% de tus gastos del mes quedo debiendo';
+        }
     }
 
     // Desglose de los gastos fijos: cuanto vale y cuanto asume el usuario

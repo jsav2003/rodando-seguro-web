@@ -192,6 +192,51 @@ legend {
     background-color: #6c757d;
 }
 
+/* No es una categoria: marca la forma de pago */
+.badge-credito {
+    background-color: #dc3545;
+}
+
+[data-tema="oscuro"] .badge-credito {
+    background-color: #b02a37;
+}
+
+/* ==========================================================================
+   Estado de la plata: alerta de exceso y franja de deuda
+   ========================================================================== */
+
+/* Bootstrap 5.2 pinta la alerta con colores fijos pensados para fondo claro:
+   sobre el tema oscuro queda un bloque casi blanco. Se ata a los tokens. */
+[data-tema="oscuro"] .alert-danger {
+    --bs-alert-color: #ea868f;
+    --bs-alert-bg: #2c1418;
+    --bs-alert-border-color: #842029;
+}
+
+.alert-danger strong {
+    color: inherit;
+}
+
+.franja-deuda {
+    background-color: var(--color-superficie-alt);
+    border: 1px solid var(--color-borde);
+    border-left: 4px solid #dc3545;
+    border-radius: .375rem;
+    padding: .85rem 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    transition: background-color .3s ease, border-color .3s ease;
+}
+
+.valor-deuda {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--color-texto);
+    overflow-wrap: anywhere;
+}
+
 /* ==========================================================================
    Modal
    ========================================================================== */

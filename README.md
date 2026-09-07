@@ -123,6 +123,27 @@ desglose de los gastos fijos y el registro de gastos diarios con su tabla.
 El botón *Resetear / Reconfigurar* borra los datos y devuelve al formulario. La
 confirmación es un modal de Bootstrap, no un `confirm()` nativo.
 
+**Alerta de exceso y gastos a crédito**
+
+Cada gasto diario se puede marcar como pagado con crédito. Un gasto a crédito no
+salió del ingreso de este mes, así que **no descuenta del efectivo disponible** y
+en cambio se acumula en la franja *Deuda en crédito*.
+
+Con eso, "pasarse del ingreso mensual" queda como una sola condición:
+
+```
+gastos fijos + gastos diarios en efectivo > ingresos totales   ⟺   disponible < 0
+```
+
+Cuando se cumple, aparece una alerta que dice por cuánto te pasaste y sugiere
+marcar como crédito lo que hayas pagado con tarjeta. Marcarlo apaga la alerta y
+hace crecer la deuda, que es justamente la decisión que la app quiere hacer
+visible. La alerta también salta al entrar al dashboard si los gastos fijos por
+sí solos ya superan el ingreso.
+
+Los gastos guardados antes de esta versión no tienen el campo `credito`; se leen
+como `false` y cuentan como efectivo, así que no hace falta migrar nada.
+
 **Persistencia**
 
 Dos claves independientes en `localStorage`, escritas con `JSON.stringify()` y
