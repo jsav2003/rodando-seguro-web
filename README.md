@@ -79,10 +79,11 @@ assets/img/       Imágenes optimizadas que usa la página
 assets/docs/      Documentos
 ```
 
-Las imágenes se guardan optimizadas (`banner.jpg`, `ekomart.jpg`): redimensionadas
-y convertidas a JPEG progresivo, pasando de 2,1 MB a 362 KB entre las dos. Los
-archivos originales quedan en `assets/img/_originales/`, que está en `.gitignore`
-para no cargar el repositorio con imágenes sin comprimir.
+Las imágenes se guardan optimizadas (`banner.jpg`, `ekomart.jpg`, `finanzas.jpg`):
+redimensionadas y convertidas a JPEG progresivo. Las dos primeras pasaron de
+2,1 MB a 362 KB entre ambas. Los archivos originales quedan en
+`assets/img/_originales/`, que está en `.gitignore` para no cargar el repositorio
+con imágenes sin comprimir.
 
 ## Parcial: Caracterización Financiera y Presupuesto
 
