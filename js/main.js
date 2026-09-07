@@ -1,10 +1,15 @@
 /* ==========================================================================
-   Modo oscuro / claro con localStorage y sessionStorage
+   Panel de almacenamiento del portafolio
    --------------------------------------------------------------------------
+   La logica del TEMA vive en js/tema.js, que es compartido con la app de
+   finanzas. Aqui queda solo lo que es propio de esta pagina: las metricas
+   de la visita y el panel que las muestra.
+
    Diferencia entre los dos almacenamientos:
 
    localStorage    Persiste aunque se cierre el navegador. Se usa para la
                    PREFERENCIA de tema, que debe recordarse entre visitas.
+                   La maneja js/tema.js.
 
    sessionStorage  Vive solo mientras la pestana este abierta y es propio de
                    cada pestana. Se usa para las METRICAS de la visita actual:
@@ -14,91 +19,21 @@
 (function () {
     'use strict';
 
+    // Helpers de storage y constantes del tema, reutilizados desde el modulo
+    var leer = Tema.leer;
+    var escribir = Tema.escribir;
+    var borrar = Tema.borrar;
+
     // --- Claves de almacenamiento ----------------------------------------
-    var CLAVE_TEMA = 'tema';           // localStorage
     var CLAVE_TEMA_INICIAL = 'temaInicial';    // sessionStorage
     var CLAVE_CAMBIOS = 'cambiosTema';    // sessionStorage
 
-    var TEMA_CLARO = 'claro';
-    var TEMA_OSCURO = 'oscuro';
-
     // --- Referencias al DOM ------------------------------------------------
-    var raiz = document.documentElement;
-    var btnTema = document.getElementById('btn-tema');
-    var iconoTema = document.getElementById('icono-tema');
-    var textoTema = document.getElementById('texto-tema');
     var btnRestablecer = document.getElementById('btn-restablecer');
     var mensajeRestablecer = document.getElementById('mensaje-restablecer');
     var valorTema = document.getElementById('valor-tema');
     var valorTemaInicial = document.getElementById('valor-tema-inicial');
     var valorCambios = document.getElementById('valor-cambios');
-
-    /* ======================================================================
-       Acceso seguro al almacenamiento
-       En modo incognito o con las cookies bloqueadas, leer o escribir puede
-       lanzar una excepcion. Se envuelve todo para que la pagina siga
-       funcionando aunque no se pueda guardar nada.
-       ====================================================================== */
-
-    function leer(almacen, clave) {
-        try {
-            return almacen.getItem(clave);
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function escribir(almacen, clave, valor) {
-        try {
-            almacen.setItem(clave, valor);
-            return true;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function borrar(almacen, clave) {
-        try {
-            almacen.removeItem(clave);
-        } catch (e) {
-            /* sin storage disponible: no hay nada que borrar */
-        }
-    }
-
-    /* ======================================================================
-       Tema
-       ====================================================================== */
-
-    // Tema que prefiere el sistema operativo del usuario
-    function temaDelSistema() {
-        return window.matchMedia &&
-            window.matchMedia('(prefers-color-scheme: dark)').matches ? TEMA_OSCURO : TEMA_CLARO;
-    }
-
-    // Prioridad: lo guardado en localStorage > preferencia del sistema
-    function obtenerTemaGuardado() {
-        var guardado = leer(localStorage, CLAVE_TEMA);
-        if (guardado === TEMA_CLARO || guardado === TEMA_OSCURO) {
-            return guardado;
-        }
-        return temaDelSistema();
-    }
-
-    // Tema que se esta mostrando ahora mismo
-    function temaActual() {
-        return raiz.getAttribute('data-tema') === TEMA_OSCURO ? TEMA_OSCURO : TEMA_CLARO;
-    }
-
-    // Pinta el tema y sincroniza el boton con el estado real
-    function aplicarTema(tema) {
-        raiz.setAttribute('data-tema', tema);
-
-        var esOscuro = tema === TEMA_OSCURO;
-        btnTema.setAttribute('aria-pressed', String(esOscuro));
-        // En modo oscuro el boton ofrece volver al claro, y viceversa
-        iconoTema.innerHTML = esOscuro ? '&#9728;&#65039;' : '&#127769;';
-        textoTema.textContent = esOscuro ? 'Modo claro' : 'Modo oscuro';
-    }
 
     /* ======================================================================
        Metricas de la sesion (sessionStorage)
@@ -125,7 +60,7 @@
        ====================================================================== */
 
     function renderizarPanel() {
-        var temaEnLocal = leer(localStorage, CLAVE_TEMA);
+        var temaEnLocal = leer(localStorage, Tema.CLAVE_TEMA);
         var inicial = leer(sessionStorage, CLAVE_TEMA_INICIAL);
         var cambios = leer(sessionStorage, CLAVE_CAMBIOS);
 
@@ -139,20 +74,18 @@
        Eventos
        ====================================================================== */
 
-    btnTema.addEventListener('click', function () {
-        var nuevoTema = temaActual() === TEMA_OSCURO ? TEMA_CLARO : TEMA_OSCURO;
-
-        aplicarTema(nuevoTema);
-        escribir(localStorage, CLAVE_TEMA, nuevoTema); // preferencia persistente
-        contarCambio();                                // metrica de la sesion
+    // js/tema.js ya aplico el tema y guardo la preferencia; aqui solo se
+    // cuenta el cambio y se repinta el panel.
+    Tema.alCambiar(function () {
+        contarCambio();
         renderizarPanel();
     });
 
     btnRestablecer.addEventListener('click', function () {
-        borrar(localStorage, CLAVE_TEMA);
+        borrar(localStorage, Tema.CLAVE_TEMA);
 
         // Sin preferencia guardada, la pagina vuelve a seguir al sistema
-        aplicarTema(temaDelSistema());
+        Tema.aplicarTema(Tema.temaDelSistema());
         renderizarPanel();
 
         mensajeRestablecer.textContent =
@@ -163,13 +96,8 @@
        Arranque
        ====================================================================== */
 
-    var temaInicial = obtenerTemaGuardado();
-
-    // El script inline del <head> ya aplico el atributo para evitar el
-    // destello blanco; aqui se repite para dejar el boton en su estado correcto.
-    aplicarTema(temaInicial);
-    iniciarSesion(temaInicial);
+    iniciarSesion(Tema.inicial);
     renderizarPanel();
 
-    console.log('[Tema] Iniciado en modo:', temaInicial);
+    console.log('[Tema] Iniciado en modo:', Tema.inicial);
 })();
