@@ -1,14 +1,16 @@
 /* ==========================================================================
    Tema claro / oscuro - modulo compartido
    --------------------------------------------------------------------------
-   Lo usan las dos paginas del sitio:
+   Lo usan las paginas del sitio que tienen boton de tema:
 
-     index.html            portafolio (ademas lleva su panel de storage)
-     finanzas/index.html   SPA de finanzas personales
+     modo-oscuro/index.html   demo del ejercicio (ademas lleva su panel de storage)
+     finanzas/index.html      SPA de finanzas personales
+
+   El portafolio (index.html) no tiene boton de tema y no carga este script.
 
    Por eso aqui solo vive lo del TEMA. Las metricas de la visita
-   (temaInicial, cambiosTema) son propias del portafolio y se quedan en
-   js/main.js, que se suscribe con Tema.alCambiar().
+   (temaInicial, cambiosTema) son propias de modo-oscuro/ y se quedan en
+   modo-oscuro/js/main.js, que se suscribe con Tema.alCambiar().
 
    Todas las referencias al DOM llevan guarda de nulidad: la pagina de
    finanzas no tiene panel de storage y no por eso debe romperse.

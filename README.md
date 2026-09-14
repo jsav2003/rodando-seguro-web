@@ -1,9 +1,8 @@
 # Portafolio — Desarrollo de Aplicaciones Web
 
-Portafolio del curso con implementación de **modo oscuro / claro** persistente
-usando HTML, CSS y JavaScript, con manejo de `localStorage` y `sessionStorage`.
-
-Entrega de la Semana 5.
+Portafolio del curso. Incluye, como página propia en `modo-oscuro/`, el
+ejercicio de la Semana 5: **modo oscuro / claro** persistente usando HTML,
+CSS y JavaScript, con manejo de `localStorage` y `sessionStorage`.
 
 ## Cómo ejecutar
 
@@ -22,6 +21,10 @@ en producción.
 > Bootstrap 5.2.3 se carga desde CDN, así que hace falta conexión a internet.
 
 ## Cómo funciona el cambio de tema
+
+La demo vive en `modo-oscuro/` (enlazada desde la tarjeta "Modo oscuro / claro"
+del portafolio). El portafolio en sí (`index.html`) no lleva el interruptor:
+siempre se muestra en el tema claro por defecto.
 
 El interruptor es el atributo `data-tema` del elemento `<html>`:
 
@@ -49,20 +52,21 @@ Bootstrap 5.2.3 no incluye modo oscuro nativo (los *color modes* llegaron en la
 | `sessionStorage` | `temaInicial` | Tema con el que se abrió la pestaña | Solo mientras la pestaña esté abierta |
 | `sessionStorage` | `cambiosTema` | Número de cambios de tema en esta visita | Solo mientras la pestaña esté abierta |
 
-La sección **Estado del almacenamiento** de la página muestra los tres valores en
-vivo. Para ver la diferencia entre ambos: cambia el tema varias veces y abre la
-página en una pestaña nueva — el tema se mantiene (`localStorage`) pero el
-contador vuelve a cero (`sessionStorage`).
+La sección **Estado del almacenamiento** de `modo-oscuro/` muestra los tres
+valores en vivo. Para ver la diferencia entre ambos: cambia el tema varias
+veces y abre la página en una pestaña nueva — el tema se mantiene
+(`localStorage`) pero el contador vuelve a cero (`sessionStorage`).
 
 El botón *Restablecer preferencia* borra la clave de `localStorage` y la página
 vuelve a seguir el tema del sistema operativo (`prefers-color-scheme`).
 
 ### Detalle: evitar el destello blanco
 
-Si el tema se aplicara solo desde `js/main.js`, al recargar en modo oscuro se
-vería un flash blanco antes de que cargue el script. Por eso hay un pequeño
-script inline en el `<head>` que lee `localStorage` y aplica `data-tema` antes
-del primer pintado. Es el único JavaScript dentro del HTML.
+Si el tema se aplicara solo desde `js/tema.js`, al recargar en modo oscuro se
+vería un flash blanco antes de que cargue el script. Por eso `modo-oscuro/index.html`
+y `finanzas/index.html` llevan un pequeño script inline en el `<head>` que lee
+`localStorage` y aplica `data-tema` antes del primer pintado. Es el único
+JavaScript inline de cada página.
 
 Todos los accesos al almacenamiento están dentro de `try/catch`: en modo
 incógnito el navegador puede bloquearlos, y la página debe seguir funcionando.
@@ -70,14 +74,25 @@ incógnito el navegador puede bloquearlos, y la página debe seguir funcionando.
 ## Estructura
 
 ```
-index.html        Página principal (navbar, hero, tarjetas, panel de storage, footer)
-css/styles.css    Variables de tema y estilos propios
-js/tema.js        Modo oscuro/claro. Compartido con finanzas/
-js/main.js        Métricas de sesión y panel de almacenamiento
-finanzas/         Parcial: SPA de caracterización financiera (ver abajo)
-assets/img/       Imágenes optimizadas que usa la página
-assets/docs/      Documentos
+index.html          Portafolio: navbar, hero, tarjetas de trabajos, footer
+css/styles.css      Variables de tema y estilos propios, compartidos por todo el sitio
+js/tema.js          Modo oscuro/claro. Compartido por modo-oscuro/ y finanzas/
+modo-oscuro/        Ejercicio de la Semana 5: interruptor de tema y panel de storage (ver abajo)
+finanzas/           Parcial: SPA de caracterización financiera (ver abajo)
+assets/img/         Imágenes optimizadas que usa la página
+assets/docs/        Documentos
 ```
+
+### Ejercicio: Modo oscuro / claro
+
+```
+modo-oscuro/
+├── index.html   Explicación del ejercicio, interruptor de tema y panel de storage
+└── js/main.js   Métricas de sesión y panel de almacenamiento, propios de esta página
+```
+
+Reutiliza `../css/styles.css` y `../js/tema.js` del portafolio. También se
+llega desde la tarjeta "Modo oscuro / claro" del portafolio.
 
 Las imágenes se guardan optimizadas (`banner.jpg`, `ekomart.jpg`, `finanzas.jpg`):
 redimensionadas y convertidas a JPEG progresivo. Las dos primeras pasaron de
@@ -185,5 +200,5 @@ Y abrir <http://localhost:8080/finanzas/>.
 ## Trabajos enlazados
 
 - [Immersive Landing Page Design](https://www.figma.com/make/F8ZqIShRKfXpooKJKKJQv5/Immersive-Landing-Page-Design?code-node-id=0-6&p=f&fullscreen=1) — diseño en Figma Make
+- Modo oscuro / claro — ejercicio de la Semana 5, en `modo-oscuro/`
 - [Caracterización Financiera](https://jsav2003.github.io/rodando-seguro-web/finanzas/) — SPA de finanzas personales
-- Rodando Seguro — sitio del taller de bicicletas de Don Carlos (en desarrollo)
