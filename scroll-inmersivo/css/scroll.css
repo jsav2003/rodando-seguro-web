@@ -1,0 +1,355 @@
+/* ==========================================================================
+   Scroll inmersivo - estilos propios de esta pagina
+   --------------------------------------------------------------------------
+   Se apoya en las variables de tema de ../css/styles.css. Las escenas son
+   "de cine": llevan su propio fondo oscuro en ambos temas, por eso sus
+   colores viven en tokens locales (--escena-*) y no en los del tema.
+   ========================================================================== */
+
+:root {
+    --escena-fondo: #0b0d14;
+    --escena-texto: #f1f3f9;
+    --escena-panel: rgba(11, 13, 20, .72);
+    --escena-borde: rgba(255, 255, 255, .16);
+    --escena-atenuado: #aab1c5;
+}
+
+/* ==========================================================================
+   Escenas de scroll
+   La seccion es ALTA (el recorrido del scroll) y dentro lleva una pieza de
+   100vh que se queda pegada mientras la pagina sigue bajando.
+   ========================================================================== */
+
+.escena {
+    position: relative;
+    height: 400vh;
+    background-color: var(--escena-fondo);
+    color: var(--escena-texto);
+}
+
+.escena-fija {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.escena-media {
+    display: block;
+    width: 100%;
+    max-width: 1100px;
+    /* deja aire arriba y abajo para el rotulo y el medidor */
+    max-height: calc(100vh - 9rem);
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
+    background-color: #000;
+}
+
+.rotulo {
+    position: absolute;
+    top: 1.25rem;
+    left: 1.5rem;
+    margin: 0;
+    font-size: .8rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--escena-atenuado);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* --- Carga de la secuencia --------------------------------------------- */
+
+.carga {
+    position: absolute;
+    top: 1.1rem;
+    right: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-size: .8rem;
+    color: var(--escena-atenuado);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.carga progress {
+    width: 8rem;
+    height: .5rem;
+    accent-color: var(--color-acento);
+}
+
+/* --- Medidor: lo que la tecnica esta haciendo en vivo ------------------- */
+
+.medidor {
+    position: absolute;
+    left: 50%;
+    bottom: 1.25rem;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0;
+    margin: 0;
+    background-color: var(--escena-panel);
+    border: 1px solid var(--escena-borde);
+    border-radius: .5rem;
+    backdrop-filter: blur(6px);
+    z-index: 3;
+}
+
+.medidor div {
+    padding: .5rem 1.1rem;
+    min-width: 6.5rem;
+    text-align: center;
+}
+
+.medidor div + div {
+    border-left: 1px solid var(--escena-borde);
+}
+
+.medidor dt {
+    font-size: .68rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--escena-atenuado);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.medidor dd {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--escena-texto);
+}
+
+@media (max-width: 575.98px) {
+    .medidor div {
+        padding: .4rem .6rem;
+        min-width: 0;
+    }
+
+    .medidor dd {
+        font-size: .95rem;
+    }
+
+    .carga {
+        top: 2.6rem;
+        left: 1.5rem;
+        right: auto;
+    }
+}
+
+/* ==========================================================================
+   Tecnica 3: la escena es DOM puro
+   El JS solo escribe --p (0 a 1) en .capa-fija; todo el movimiento sale de
+   transform con calc() sobre esa variable.
+   ========================================================================== */
+
+.escena-dom {
+    background-color: transparent;
+}
+
+.capa-fija {
+    --p: 0;
+    position: absolute;             /* antes de llegar: anclada al tope de la seccion */
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(to bottom, #1a2752 0%, #6d5a8e 55%, #ffaa6e 100%);
+}
+
+.capa-fija[data-estado="fijo"] {
+    position: fixed;                /* mientras la seccion cubre la ventana */
+}
+
+.capa-fija[data-estado="despues"] {
+    top: auto;                      /* al terminar: anclada al fondo de la seccion */
+    bottom: 0;
+}
+
+/* Sol: se pone a medida que se avanza */
+.sol {
+    position: absolute;
+    top: 14vh;
+    right: 14vw;
+    width: 14vmin;
+    height: 14vmin;
+    border-radius: 50%;
+    background-color: #ffe2a0;
+    transform: translateY(calc(var(--p) * 38vh));
+    will-change: transform;
+}
+
+/* Colinas: SVG mas ancho que la pantalla, desplazado a distinta velocidad */
+.colinas {
+    position: absolute;
+    left: 0;
+    bottom: 26vh;
+    height: 22vh;
+    will-change: transform;
+}
+
+.colinas-lejos {
+    width: 200%;
+    fill: #4e4c80;
+    transform: translateX(calc(var(--p) * -50%));
+}
+
+.colinas-cerca {
+    width: 400%;
+    height: 14vh;
+    fill: #343a68;
+    transform: translateX(calc(var(--p) * -75%));
+}
+
+/* Calzada */
+.suelo {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 26vh;
+    background-color: #26282e;
+    border-top: .8vh solid #3a3e46;
+}
+
+/* Marcas viales: 300vw de rayas con periodo 10vw, recorre 200vw */
+.marcas {
+    position: absolute;
+    left: 0;
+    top: 30%;
+    width: 300vw;
+    height: .9vh;
+    background: repeating-linear-gradient(to right, #f0f0eb 0 5vw, transparent 5vw 10vw);
+    transform: translateX(calc(var(--p) * -200vw));
+    will-change: transform;
+}
+
+/* Bicicleta: avanza por la pantalla y sus ruedas giran con el mismo --p */
+.bici {
+    position: absolute;
+    bottom: 5vh;
+    left: 8vw;
+    width: clamp(220px, 32vw, 440px);
+    transform: translateX(calc(var(--p) * 42vw));
+    will-change: transform;
+}
+
+.bici svg {
+    display: block;
+    width: 100%;
+    overflow: visible;
+}
+
+.bici .rueda {
+    transform-box: fill-box;
+    transform-origin: center;
+    /* el suelo recorre 200vw; con este giro la llanta no patina a simple vista */
+    transform: rotate(calc(var(--p) * 2000deg));
+}
+
+.bici .biela {
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: rotate(calc(var(--p) * 4000deg));
+}
+
+.bici .llanta { fill: none; stroke: #121216; stroke-width: 9; }
+.bici .rayo { stroke: #c8cdd7; stroke-width: 1.6; }
+.bici .cuadro { fill: none; stroke: var(--color-acento); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.bici .biela line { stroke: #c8cdd7; stroke-width: 5; stroke-linecap: round; }
+.bici .ropa { stroke: #f0f0f5; stroke-width: 26; stroke-linecap: round; }
+.bici .pierna { fill: none; stroke: #1c1e28; stroke-width: 14; stroke-linecap: round; stroke-linejoin: round; }
+.bici .brazo { stroke: #e8bea0; stroke-width: 9; stroke-linecap: round; }
+.bici .piel { fill: #e8bea0; }
+.bici .casco { fill: var(--color-acento); }
+
+/* Pasos de texto: viajan por encima de la capa fija */
+.pasos {
+    position: relative;
+    z-index: 1;
+}
+
+.paso {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem;
+}
+
+.paso-tarjeta {
+    max-width: 30rem;
+    padding: 1.25rem 1.5rem;
+    background-color: var(--escena-panel);
+    color: var(--escena-texto);
+    border: 1px solid var(--escena-borde);
+    border-radius: .5rem;
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transform: translateY(2.5rem);
+    transition: opacity .5s ease, transform .5s ease;
+}
+
+.paso.visible .paso-tarjeta {
+    opacity: 1;
+    transform: none;
+}
+
+.paso-tarjeta h3 {
+    color: var(--escena-texto);
+    font-size: 1.15rem;
+}
+
+.paso-tarjeta p {
+    margin: 0;
+    color: var(--escena-atenuado);
+}
+
+.paso-tarjeta code {
+    background-color: rgba(255, 255, 255, .1);
+    color: #9ec5fe;
+}
+
+@media (min-width: 992px) {
+    .paso {
+        padding-left: 8vw;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .paso-tarjeta {
+        transition: none;
+        transform: none;
+    }
+}
+
+/* ==========================================================================
+   Comparativa final
+   ========================================================================== */
+
+.tarjeta-tecnica h3 {
+    font-size: 1.1rem;
+}
+
+.tarjeta-tecnica dl {
+    margin: 0;
+}
+
+.tarjeta-tecnica dt {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--color-atenuado);
+    font-weight: 400;
+    margin-top: .75rem;
+}
+
+.tarjeta-tecnica dd {
+    margin: 0;
+}

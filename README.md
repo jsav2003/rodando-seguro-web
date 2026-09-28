@@ -79,6 +79,7 @@ css/styles.css      Variables de tema y estilos propios, compartidos por todo el
 js/tema.js          Modo oscuro/claro. Compartido por modo-oscuro/ y finanzas/
 modo-oscuro/        Ejercicio de la Semana 5: interruptor de tema y panel de storage (ver abajo)
 finanzas/           Parcial: SPA de caracterización financiera (ver abajo)
+scroll-inmersivo/   Demo comparativa de tres técnicas de scroll inmersivo (ver abajo)
 assets/img/         Imágenes optimizadas que usa la página
 assets/docs/        Documentos
 ```
@@ -99,6 +100,65 @@ redimensionadas y convertidas a JPEG progresivo. Las dos primeras pasaron de
 2,1 MB a 362 KB entre ambas. Los archivos originales quedan en
 `assets/img/_originales/`, que está en `.gitignore` para no cargar el repositorio
 con imágenes sin comprimir.
+
+## Demo: Scroll inmersivo
+
+Una sola página en `scroll-inmersivo/` con tres secciones, una por técnica. Las
+tres cuentan lo mismo (una bicicleta rodando al atardecer) para que la
+comparación sea de la técnica y no del contenido. Cada escena lleva un medidor
+que muestra en vivo cuánto trabajo hace.
+
+| # | Técnica | Cómo se mueve la escena | Peso extra |
+|---|---|---|---|
+| 1 | Video HTML5 | `video.currentTime = progreso × duración`; el video nunca se reproduce | ~0,9 MB |
+| 2 | Secuencia en `<canvas>` | `drawImage()` del cuadro `round(progreso × 95)`, con los 96 cuadros precargados | ~1,4 MB |
+| 3 | DOM / CSS | `position: fixed` + `IntersectionObserver` + `transform`; JS solo escribe la variable `--p` | ~0 |
+
+Las tres calculan el progreso igual (`js/comun.js`): 0 cuando el borde superior
+de la sección toca el tope de la ventana y 1 cuando su borde inferior toca el
+fondo. Las tres suavizan el valor con una interpolación, y dejan de trabajar
+cuando su sección no se ve. Con `prefers-reduced-motion` se desactiva el
+suavizado.
+
+**Detalles que importan**
+
+- **Video:** está codificado con un keyframe por cuadro (`-g 1`). Con un GOP
+  normal cada seek obliga a decodificar desde el keyframe anterior y el scrub se
+  entrecorta. Es la razón por la que un video "de scroll" pesa más que uno normal.
+- **Canvas:** el costo se paga al inicio (descargar 96 imágenes) y no en cada
+  movimiento; por eso lleva barra de carga.
+- **DOM/CSS:** la capa fija vive dentro de su sección y pasa por tres estados
+  (`antes` → `fijo` → `despues`) según dos observadores. Antes y después va en
+  `position: absolute`, anclada a su borde, para no tapar el resto de la página.
+
+**Material generado.** El clip no es un video externo: lo dibuja
+`scroll-inmersivo/herramientas/generar_clip.py` y de ahí salen el mp4 y los
+frames, así que ambas técnicas usan exactamente las mismas imágenes.
+
+```bash
+pip install pillow imageio-ffmpeg
+python scroll-inmersivo/herramientas/generar_clip.py
+```
+
+Si se cambia `FRAMES` en el script, hay que cambiar también `TOTAL` en
+`js/canvas-secuencia.js` y el `max` de la barra de carga en el HTML.
+
+```
+scroll-inmersivo/
+├── index.html              Introducción, las tres escenas y la comparativa
+├── css/scroll.css          Escenas, medidor y capa fija, sobre ../css/styles.css
+├── js/
+│   ├── comun.js            Progreso, suavizado y bucle que solo corre si la escena se ve
+│   ├── video-scroll.js     Técnica 1
+│   ├── canvas-secuencia.js Técnica 2
+│   └── dom-fixed.js        Técnica 3
+├── assets/                 video.mp4 y frames/f_000.webp … f_095.webp
+└── herramientas/generar_clip.py
+```
+
+Reutiliza `../css/styles.css` y `../js/tema.js`, así que el modo oscuro también
+funciona aquí. Se abre desde la tarjeta "Scroll inmersivo" del portafolio o en
+<http://localhost:8080/scroll-inmersivo/> con el servidor local.
 
 ## Parcial: Caracterización Financiera y Presupuesto
 
@@ -202,3 +262,4 @@ Y abrir <http://localhost:8080/finanzas/>.
 - [Immersive Landing Page Design](https://www.figma.com/make/F8ZqIShRKfXpooKJKKJQv5/Immersive-Landing-Page-Design?code-node-id=0-6&p=f&fullscreen=1) — diseño en Figma Make
 - Modo oscuro / claro — ejercicio de la Semana 5, en `modo-oscuro/`
 - [Caracterización Financiera](https://jsav2003.github.io/rodando-seguro-web/finanzas/) — SPA de finanzas personales
+- Scroll inmersivo — comparativa de tres técnicas, en `scroll-inmersivo/`
